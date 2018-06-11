@@ -15,6 +15,27 @@ def input_user_id():
     return source_uid
 
 
+def stable_start(do_stuff):
+    t = 0
+    result = None
+    while True:
+        try:
+            # Only 5 attempts!!!
+            if t == 5:
+                print('Something went wrong, '
+                      'check your Internet connection and so on')
+            else:
+                time.sleep(1/3)
+                result = do_stuff
+        except BaseException:
+            print('Something went wrong, trying for the {} time'.format(t+1))
+            t += 1
+            continue
+        break
+
+    return result
+
+
 def get_user_friends():
     source_uid = input_user_id
     response = requests.get(
@@ -22,7 +43,7 @@ def get_user_friends():
         params=dict(
             v='5.74',
             access_token=TOKEN,
-            source_uid=source_uid,
+            source_uid=source_uid
         )
     )
     print('User friend list received')
@@ -36,7 +57,7 @@ def filter_user_live_friend_list():
     user_friend_count = user_friends.json()['response']['count']
     user_live_friend_list = []
     i = 0
-    print("Filtering process user's friends has begun")
+    print("User's friends filtering process has begun")
     for user_id in user_friend_list:
         time.sleep(1/3)
         print('* Left {} users to process'.format(user_friend_count-i))
@@ -107,15 +128,10 @@ def is_user_in_group(friend, group):
     return response
 
 
-def write_to_json(file):
-    with open('data.txt', 'w', encoding='utf-8') as outfile:
-        json.dump(file, outfile, ensure_ascii=False)
-
-
 def create_list_of_group():
     """Return list of groups that specified user belongs to without friends"""
-    time.sleep(1/3)
-    user_groups_request = get_user_groups()
+    #time.sleep(1/3)
+    user_groups_request = stable_start(get_user_groups())
     user_groups_list = user_groups_request.json()['response']['items']
     user_groups_count = user_groups_request.json()['response']['count']
 
@@ -147,6 +163,12 @@ def create_list_of_group():
     return groups_wout_friends
 
 
+def write_to_json(file):
+    with open('data.txt', 'w', encoding='utf-8') as outfile:
+        json.dump(file, outfile, ensure_ascii=False)
+
+
+
 input_user_id = input_user_id()
 groups_wout_friends = create_list_of_group()
 write_to_json(groups_wout_friends)
@@ -155,3 +177,4 @@ write_to_json(groups_wout_friends)
 # with open('data.txt', 'r', encoding='utf-8') as out:
 #     text = json.load(out)
 #     print(text)
+
